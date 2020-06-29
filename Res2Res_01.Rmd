@@ -1,0 +1,134 @@
+---
+title: "Costant presure before control valve"
+
+subtitle: "Reservoir to reservoir"
+
+description: | 
+  Scientific and technical writing, native to the web
+
+date: "`r format(Sys.time(), '%d %B %Y')`"
+
+author: "Dr. Raúl Trujillo Álvarez"
+
+params:
+  model: Res2Res_V001
+  totalhead_01: 100
+  totalhead_02:   5
+  valv_name: RIKO
+  qmin: 90
+  qmax: 270
+  altitude: 0
+  temperature: 20
+output: html_document
+---
+
+
+```{r setup, include = TRUE}
+
+  knitr::opts_chunk$set(include = FALSE)
+  library(tidyverse)
+  library(wcontrolvalve)
+  library(epanetReader)
+  library(epanet2toolkit)
+
+```
+
+
+
+```{r read_hmodel, include=FALSE}
+  
+  # Read network data from EPANET .inp ﬁle. 
+  net <- here::here("epanet", str_c(params$model,".inp")) %>% 
+    read.inp()
+
+  # Add or drop levels using package library(forcats).
+   # levels(net$Status$Status) <- c("None", "Open", "Closed")
+   # levels(net$Valves$Type)   <- c("PRV", "PSV", "PBV", "FCV", "TCV", "GPV")
+   # levels(net$Pipes$Status)  <- c("Open", "Closed", "CV")
+
+  # Changing the total head of the reservoirs 
+  net$Reservoirs <- net$Reservoirs %>% 
+    mutate(Head = case_when( ID == "RES_001" ~ params$totalhead_01,
+                             ID == "RES_002" ~ params$totalhead_02))
+
+  # Changing the setting value of the viscosity of the water in the H. model
+  net$Options$VISCOSITY <- as.character(kinematic_viscosity(params$temperature))
+  
+  # Update Net Report with "Nodes All" and "Links All" 
+  net$Report <- c("Status No", "Summary No", "Page 0", "Nodes All", "Links All") 
+  
+  # Changing the valve status to open (the system peak flow without valve)
+  net$Status$Status[net$Status$ID == params$valv_name] <- "Open" 
+  
+  # Writing the net
+  write.inp(net, here::here("epanet", str_c(params$model,".inp")) ) 
+
+
+  # Run EPANET toolkit to obtain the hydraulic solution
+  ENepanet( here::here("epanet", str_c(params$model,".inp")),
+            here::here("epanet", str_c(params$model,".rpt")))
+
+  # Read Report
+  net_report <- read.rpt(here::here("epanet", str_c(params$model,".rpt")))
+  
+  
+  # Peak flow without valve
+  results <- valve_analyze( net = net, 
+                            report = net_report, 
+                            valve_name = params$valv_name, 
+                            temperature = params$temperature, 
+                            masl = params$altitude)
+  
+  # Extracting the maximum flow that the system gives without the control valve. 
+  q_max <- max(results$Flow)
+  
+  net$Times[1] <- "Duration 100:00"
+  net$Times[2] <- "Hydraulic Timestep 1:00"
+  
+  
+  net$Controls <- str_c( "LINK RIKO ", 
+                     round(seq(q_max/100, q_max-q_max/100, length.out=99),0), 
+                     " AT TIME ",  seq(0, 98)) %>% c("LINK RIKO OPEN AT TIME 99")
+  
+  
+  # Writing the net with the new controls
+  write.inp(net, here::here("epanet", str_c(params$model,".inp")) ) 
+
+  
+  # Run EPANET toolkit to obtain the hydraulic solution
+  ENepanet( here::here("epanet", str_c(params$model,".inp")),
+            here::here("epanet", str_c(params$model,".rpt")))
+
+  # Read Report
+  net_report <- read.rpt(here::here("epanet", str_c(params$model,".rpt")))
+
+
+  # Peak valve data
+  results <-  valve_analyze( net = net, 
+                             report = net_report, 
+                             valve_name = params$valv_name, 
+                             temperature = params$temperature, 
+                             masl = params$altitude)
+  
+  # delete last row in tibble and column Timestamp
+  results <-  results %>% 
+    arrange(Flow) %>% 
+    slice(-n()) %>% 
+    dplyr::select(-Timestamp)
+    
+```
+
+
+```{r plot_qp}
+
+  # Plot 
+  results %>% 
+    ggplot( aes( x = Flow )) +
+      geom_line( aes( y = p1 ), color = "darkred") +
+      geom_line( aes( y = p2 ), color="steelblue") +
+      xlab('Flow (LPS)') +
+      ylab('Pressure (m)')
+
+```
+
+
