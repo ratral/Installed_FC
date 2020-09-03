@@ -125,7 +125,7 @@ output: html_document
   results %>% 
     ggplot( aes( x = Flow )) +
       geom_line( aes( y = p1 ), color = "darkred") +
-      geom_line( aes( y = p2 ), color="steelblue") +
+      geom_line( aes( y = p2 ), color= "steelblue") +
       xlab('Flow (LPS)') +
       ylab('Pressure (m)')
 

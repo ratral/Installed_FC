@@ -1,0 +1,40 @@
+  Page 1                                    Thu Jul 02 11:47:38 2020
+
+  ******************************************************************
+  *                           E P A N E T                          *
+  *                   Hydraulic and Water Quality                  *
+  *                   Analysis for Pipe Networks                   *
+  *                         Version 2.1                            *
+  ******************************************************************
+  
+  Input Error 201: syntax error in following line of [Reservoir] section:
+  FN_02		
+
+  Input Error 201: syntax error in following line of [Reservoir] section:
+  FN_01		
+
+  Input Error 201: syntax error in following line of [Reservoir] section:
+  FN_04		
+
+  Input Error 201: syntax error in following line of [Reservoir] section:
+  FN_03		
+
+  Input Error 201: syntax error in following line of [Reservoir] section:
+  FN_06		
+
+  Input Error 201: syntax error in following line of [Reservoir] section:
+  FN_05		
+
+  Input Error 201: syntax error in following line of [Reservoir] section:
+  FN_08		
+
+  Input Error 201: syntax error in following line of [Reservoir] section:
+  FN_07		
+
+  Input Error 201: syntax error in following line of [Reservoir] section:
+  FV_01		
+
+  Input Error 201: syntax error in following line of [Reservoir] section:
+  FV_02		
+
+  Input Error 200: one or more errors in input file.

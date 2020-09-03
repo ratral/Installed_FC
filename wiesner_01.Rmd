@@ -1,0 +1,44 @@
+---
+title: "Cálculo de las válvulas de control de flujo RIKO"
+
+subtitle: "VAG"
+
+description: | 
+  Scientific and technical writing, native to the web
+
+date: "`r format(Sys.time(), '%d %B %Y')`"
+
+author: "Dr. Raúl Trujillo Álvarez"
+
+params:
+  altitude: 2800
+  temperature: 15
+  dn: 1000
+  cyl_E: 'r c(-2.39,	1.39,	67.42,	1.78)'
+  cyl_sz40: 'r c(-2.39,	1.39,	67.42,	1.78)'
+output: html_document
+---
+
+
+```{r setup, include = TRUE}
+
+  knitr::opts_chunk$set(include = FALSE)
+  library(tidyverse)
+  library(wcontrolvalve)
+  library(epanetReader)
+  library(epanet2toolkit)
+
+```
+
+
+
+```{r read_hmodel, include=FALSE}
+  
+  # Read results of the Scenarios from Wiesner
+  results <- here::here("wiesner", "results.rds") %>% 
+    readRDS() %>% 
+    dplyr::select("scenarios_id", "Timestamp", "valve", "p1", "p2", "Headloss",
+                  "Velocity", "Flow", "kv", "Zv", sigma = "sigma_2")
+
+```
+
